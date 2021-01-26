@@ -1,0 +1,17 @@
+#	Generally:
+#	two nucleotides with the same type will be favored and have score of: 3.0
+#	two nucleotides with different types will be avoided and have score of: -4.0
+#	
+#	The base-stacking are classified into four groups: A, C, G, U
+#	More sophisticated scoring function is encouraged
+#
+#	!!! IMPORTANT: if you change the scoring function here, you may want to 
+#					change the gap openning and closing scorings correspondingly.
+#					 
+#					You can change these values via command-line when you execute this program.
+#
+#	The following is the 4*4 scoring matrix
+3.0	-1.0	-1.0	-1.0
+-1.0	3.0	-1.0	-1.0
+-1.0	-1.0	3.0	-1.0
+-1.0	-1.0	-1.0	3.0
