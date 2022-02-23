@@ -204,6 +204,27 @@ def getDSSRseqnum(input, with_res_name=False):
         return resname, seqnum, icode
     return seqnum, icode
 
+def load_fasta_seq(pdb_id, chains):
+    fasta_seq_dict = {}
+    fasta_fn = os.path.join(fasta_dir, pdb_id + '.fasta')
+    for record in SeqIO.parse(fasta_fn, 'fasta'):
+        # fasta_seq_dict[record.id.strip().split('|')[0].strip().split(':')[1]] = str(record.seq)
+        # chain_ids = record.description.strip().split('|')[1].strip().split(' ')[1].strip().split(',')
+        # for chain_id in chain_ids:
+        #     fasta_seq_dict[chain_id] = str(record.seq)
+        chain_ids = record.description.strip().split('|')[1].strip().split(' ')[1:]
+        for chain_id in chain_ids:
+            chain_id = chain_id.strip().strip(',')
+            if '[' in chain_id:
+                continue
+                # chain_id = chain_id.split('[')[0].strip()
+            elif ']' in chain_id:
+                chain_id = chain_id.split(']')[0].strip()
+            
+            fasta_seq_dict[chain_id] = str(record.seq)
+
+    return fasta_seq_dict
+    
 def get_loop_type(loop):
     _, regions = loop.strip().split(':')
     regions = regions.strip().split('_')

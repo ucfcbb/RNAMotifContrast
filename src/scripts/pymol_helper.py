@@ -188,7 +188,8 @@ def is_acceptable_rmsd(rmsd, align_len, is_length_adjusted_score, merging_rmsd_t
 
 def extract_alignment_scores(scores):
     alignment_length = alignment_score = 0
-    rmsd = zscore = 0.0
+    rmsd = 20.0
+    zscore = 0.0
     if len(scores) == 1:
         rmsd = scores
     elif len(scores) == 2:
@@ -514,7 +515,8 @@ def aln_residue_temp(pdb_res_mapping_dict, fasta_seq_dict, r1, r2, loop1, loop2,
         # fix alignment
         fix_cnt += 1
         
-        write_alignment_fixing_log(fw, fix_cnt, r1, r2, loop1, loop2, aln1, aln2, 'before')
+        if output_env == 'local':
+            write_alignment_fixing_log(fw, fix_cnt, r1, r2, loop1, loop2, aln1, aln2, 'before')
 
         fasta_seq1 = get_segment_fasta_seq(fasta_seq_dict[chain1], region1)
         fasta_seq2 = get_segment_fasta_seq(fasta_seq_dict[chain2], region2)
@@ -527,7 +529,8 @@ def aln_residue_temp(pdb_res_mapping_dict, fasta_seq_dict, r1, r2, loop1, loop2,
 
         aln1, aln2 = fix_alignment_pair(fasta_seq1, fasta_seq2, aln1, aln2)
         
-        write_alignment_fixing_log(fw, fix_cnt, r1, r2, loop1, loop2, aln1, aln2, 'after')
+        if output_env == 'local':
+            write_alignment_fixing_log(fw, fix_cnt, r1, r2, loop1, loop2, aln1, aln2, 'after')
 
         am1, am2 = aln_map(aln1, aln2, aln_start, aln_end)
 
@@ -560,16 +563,26 @@ def aln_residue_temp(pdb_res_mapping_dict, fasta_seq_dict, r1, r2, loop1, loop2,
 
     return pdb1_pm, pdb2_pm, i1_pm, i2_pm
 
-def load_fasta_seq(pdb_id, chains):
-    fasta_seq_dict = {}
-    fasta_fn = os.path.join(fasta_dir, pdb_id + '.fasta')
-    for record in SeqIO.parse(fasta_fn, 'fasta'):
-        # fasta_seq_dict[pdb_id + '_' + record.id.strip().split('|')[0].strip().split(':')[1]] = str(record.seq)
-        chain_ids = record.description.strip().split('|')[1].strip().split(' ')[1].strip().split(',')
-        for chain_id in chain_ids:
-            fasta_seq_dict[chain_id] = str(record.seq)
+# def load_fasta_seq(pdb_id, chains):
+#     fasta_seq_dict = {}
+#     fasta_fn = os.path.join(fasta_dir, pdb_id + '.fasta')
+#     for record in SeqIO.parse(fasta_fn, 'fasta'):
+#         # fasta_seq_dict[pdb_id + '_' + record.id.strip().split('|')[0].strip().split(':')[1]] = str(record.seq)
+#         # chain_ids = record.description.strip().split('|')[1].strip().split(' ')[1].strip().split(',')
+#         # for chain_id in chain_ids:
+#         #     fasta_seq_dict[chain_id] = str(record.seq)
+#         chain_ids = record.description.strip().split('|')[1].strip().split(' ')[1:]
+#         for chain_id in chain_ids:
+#             chain_id = chain_id.strip().strip(',')
+#             if '[' in chain_id:
+#                 continue
+#                 # chain_id = chain_id.split('[')[0].strip()
+#             elif ']' in chain_id:
+#                 chain_id = chain_id.split(']')[0].strip()
+            
+#             fasta_seq_dict[chain_id] = str(record.seq)
 
-    return fasta_seq_dict
+#     return fasta_seq_dict
 
 def load_pdb_res_map(chain):
     """load sequence index->pdb index"""
@@ -3279,7 +3292,10 @@ def load_pdb_fasta_mapping_and_fasta_seq_dict(cluster_id, alignment_data):
             pdb_res_mapping_dict[pdb_chain] = load_pdb_res_map(pdb_chain)
 
     for pdb_id in pdb_chain_dict:
-        fasta_seq_dict.update(load_fasta_seq(pdb_id, pdb_chain_dict[pdb_id]))
+        temp_seq_dict = load_fasta_seq(pdb_id, pdb_chain_dict[pdb_id])
+        for chain_id in temp_seq_dict:
+            fasta_seq_dict[pdb_id + '_' + chain_id] = temp_seq_dict[chain_id]
+        # fasta_seq_dict.update(load_fasta_seq(pdb_id, pdb_chain_dict[pdb_id]))
 
     return pdb_res_mapping_dict, fasta_seq_dict
 
@@ -3328,7 +3344,7 @@ def split_subfamily_cumulative_count(ordered_dependency_list):
             next_split_size = max_no_of_motifs_in_superimposition
 
             if remaining_motifs < 2 * max_no_of_motifs_in_superimposition:
-                next_split_size = (remaining_motifs + 1) / 2
+                next_split_size = int((remaining_motifs + 1) / 2)
             
             # end_ind = start_ind + next_split_size
             remaining_motifs -= next_split_size

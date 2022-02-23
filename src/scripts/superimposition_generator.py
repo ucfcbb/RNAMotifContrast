@@ -270,9 +270,9 @@ def extract_atom_coordinate(loop_coord, pdb_pm, pdb_id):
     for chain_id, index, icode in pdb_pm:
         if chain_id == '':
             continue
-        if (pdb_id, chain_id, index, icode) in loop_coord_backbone and loop_coord_backbone[(pdb_id, chain_id, index, icode)] != 0.:
+        if (pdb_id, chain_id, index, icode) in loop_coord_backbone and loop_coord_backbone[(pdb_id, chain_id, index, icode)] != 0. and loop_coord_backbone[(pdb_id, chain_id, index, icode)] != None:
             aligned_segment_coord.append(loop_coord_backbone[(pdb_id, chain_id, index, icode)])
-        if (pdb_id, chain_id, index, icode) in loop_coord_sugar and loop_coord_sugar[(pdb_id, chain_id, index, icode)] != 0.:
+        if (pdb_id, chain_id, index, icode) in loop_coord_sugar and loop_coord_sugar[(pdb_id, chain_id, index, icode)] != 0. and loop_coord_sugar[(pdb_id, chain_id, index, icode)] != None:
             aligned_segment_coord.append(loop_coord_sugar[(pdb_id, chain_id, index, icode)])
 
     return aligned_segment_coord
@@ -505,6 +505,105 @@ def get_loop_string_for_filtering_log(r):
 
     return loop_str
 
+def debug_print(r1, r2, rmsd, zscore, score, align_length, t1, t2, pairwise_align_details, aln_data, align_len_threshold):
+    debug_loop_list = ['4V8P_D1:2992-2995_3127-3132', '4V8P_D1:3127-3132_2992-2995', '6D9J_2:141-144_152-155', '6D9J_2:152-155_141-144', '6ERI_BA:606-608_691-693', '6ERI_BA:691-693_606-608', '6EK0_L5:3714-3719_3732-3737', '6EK0_L5:3732-3737_3714-3719', '6GAW_BA:394-398_411-415', '6GAW_BA:411-415_394-398']
+    if r1 in debug_loop_list:
+    # if True:
+        logger.info('!!!!!!!!!!!!!!DEBUG PRINT START!!!!!!!!!!!!!!!!!!!!')
+        logger.info('align_len_threshold: ' + str(align_len_threshold))
+        logger.info(get_loop_string_for_filtering_log(r1))
+        logger.info(get_loop_string_for_filtering_log(r2))
+        logger.info('zscore: ' + str(zscore) + ', rmsd: ' + str(rmsd) + ', alignment_score: ' + str(score) + ', alignment_length: ' + str(align_length))
+        logger.info(get_loop_string_for_filtering_log(t1))
+        logger.info(get_loop_string_for_filtering_log(t2))
+
+        max_align_length = max_loop_index = 0
+        max_length_loop = ''
+        max_loop_rmsd = 1000.0
+        # max_zscore = 0.0
+
+        for (j, r2, rmsd, align_length) in pairwise_align_details:
+            if is_acceptable_align_len(align_length, align_len_threshold) and rmsd < max_loop_rmsd:
+            # if is_better_alignment_score((rmsd, align_length), (max_loop_rmsd, max_align_length), align_len_threshold, is_normalized_score):
+                max_align_length = align_length
+                max_length_loop = r2
+                max_loop_index = j
+                max_loop_rmsd = rmsd
+
+        logger.info('Debug max_rmsd with alignment length threshold')
+        logger.info('max_length_loop: ' + max_length_loop)
+        logger.info('max_align_length: ' + str(max_align_length))
+        logger.info('max_loop_rmsd: ' + str(max_loop_rmsd))
+
+        max_align_length = max_loop_index = 0
+        max_length_loop = ''
+        max_loop_rmsd = 1000.0
+
+        for (j, r2, rmsd, align_length) in pairwise_align_details:
+            if rmsd < max_loop_rmsd:
+            # if is_better_alignment_score((rmsd, align_length), (max_loop_rmsd, max_align_length), align_len_threshold, is_normalized_score):
+                max_align_length = align_length
+                max_length_loop = r2
+                max_loop_index = j
+                max_loop_rmsd = rmsd
+
+        logger.info('Debug max_rmsd without alignment length threshold')
+        logger.info('max_length_loop: ' + max_length_loop)
+        logger.info('max_align_length: ' + str(max_align_length))
+        logger.info('max_loop_rmsd: ' + str(max_loop_rmsd))
+
+        max_align_length = max_loop_index = 0
+        max_length_loop = ''
+        # max_loop_rmsd = 1000.0
+        max_zscore = 0.0
+        max_t1 = max_t2 = ''
+
+        for (j, r2, rmsd, align_length) in pairwise_align_details:
+            (t1, t2, zscore, cr1, cr2, aln1, aln2, score) = aln_data[strToNode(r1)][strToNode(r2)]
+            if is_acceptable_align_len(align_length, align_len_threshold) and zscore > max_zscore:
+            # if is_better_alignment_score((rmsd, align_length), (max_loop_rmsd, max_align_length), align_len_threshold, is_normalized_score):
+                max_align_length = align_length
+                max_length_loop = r2
+                max_loop_index = j
+                max_zscore = zscore
+                max_t1 = t1
+                max_t2 = t2
+
+        logger.info('Debug max_zscore with alignment length threshold')
+        logger.info('max_length_loop: ' + max_length_loop)
+        logger.info('max_align_length: ' + str(max_align_length))
+        logger.info('max_loop_zscore: ' + str(max_zscore))
+        logger.info(get_loop_string_for_filtering_log(max_t1))
+        logger.info(get_loop_string_for_filtering_log(max_t2))
+
+        max_align_length = max_loop_index = 0
+        max_length_loop = ''
+        # max_loop_rmsd = 1000.0
+        max_zscore = 0.0
+        max_t1 = max_t2 = ''
+
+        for (j, r2, rmsd, align_length) in pairwise_align_details:
+            (t1, t2, zscore, cr1, cr2, aln1, aln2, score) = aln_data[strToNode(r1)][strToNode(r2)]
+            if zscore > max_zscore:
+            # if is_better_alignment_score((rmsd, align_length), (max_loop_rmsd, max_align_length), align_len_threshold, is_normalized_score):
+                max_align_length = align_length
+                max_length_loop = r2
+                max_loop_index = j
+                max_zscore = zscore
+                max_t1 = t1
+                max_t2 = t2
+
+        logger.info('Debug max_zscore without alignment length threshold')
+        logger.info('max_length_loop: ' + max_length_loop)
+        logger.info('max_align_length: ' + str(max_align_length))
+        logger.info('max_loop_zscore: ' + str(max_zscore))
+        logger.info(get_loop_string_for_filtering_log(max_t1))
+        logger.info(get_loop_string_for_filtering_log(max_t2))
+
+
+        logger.info('!!!!!!!!!!!!!!DEBUG PRINT END!!!!!!!!!!!!!!!!!!!!')
+        # sys.exit()
+
 def filter_loops_in_cluster(clusters, rmsd_data_dict, alignment_data, is_alignment_from_user):
 
     current_rmsd_data_dict = copy.deepcopy(rmsd_data_dict)
@@ -529,6 +628,10 @@ def filter_loops_in_cluster(clusters, rmsd_data_dict, alignment_data, is_alignme
                     # (t1, t2, zscore, cr1, cr2, aln1, aln2, score) = alignment_data[cluster_id.strip().split('_')[0]][strToNode(r1)][strToNode(r2)]
                     (t1, t2, zscore, cr1, cr2, aln1, aln2, score) = alignment_data[cluster_id][strToNode(r1)][strToNode(r2)]
 
+                    # debug_print(r1, r2, rmsd, zscore, score, align_length, t1, t2, pairwise_align_details, alignment_data[cluster_id], align_len_threshold)
+
+                    # logger.info(get_loop_string_for_filtering_log(r1) + '; zscore: ' + str(zscore) + ', rmsd: ' + str(rmsd) + '.')
+                    
                     if extreme_filtering == True and not is_acceptable_align_len(align_length, align_len_threshold):
                         logger.info('Filtering ' + get_loop_string_for_filtering_log(r1).ljust(75) + ' from ' + str(cluster_id).ljust(max_cid_len) + ' based on length \t(align_length: ' + str(align_length) + ') [Extreme filtering].')
                         removed_loops += 1
@@ -556,6 +659,7 @@ def filter_loops_in_cluster(clusters, rmsd_data_dict, alignment_data, is_alignme
         
         if len(get_loops_in_cluster(filtered_cluster)) == len(get_loops_in_cluster(clusters)):
             break
+        # break
 
         clusters = copy.deepcopy(filtered_cluster)
 
@@ -732,14 +836,51 @@ def extract_current_rmsd_data_dict(rmsd_data_dict, cluster_id, loops):
 
     return (avg_rmsd, new_rmsd_data_list_dict)
 
+def debug_print2(alignment_data):
+    logger.info('!!!!!!!!!!!!!!DEBUG PRINT 2 START!!!!!!!!!!!!!!!!!!!!')
+    r1 = '6EK0_L5:3714-3719_3732-3737'
+    # r2 = '6ERI_AA:1860-1864_1900-1904'
+    r2 = '5O60_A:2067-2071_2110-2114'
+    node1 = strToNode(r1)
+    node2 = strToNode(r2)
+    for c_id in alignment_data:
+        if node1 in alignment_data[c_id]:# and node2 in alignment_data[c_id][node1]:
+            logger.info(str(alignment_data[c_id][node1][node2]))
+
+    logger.info('!!!!!!!!!!!!!!DEBUG PRINT 2 END!!!!!!!!!!!!!!!!!!!!')
+
+def debug_print3(rmsd_data_dict):
+    logger.info('!!!!!!!!!!!!!!DEBUG PRINT 3 START!!!!!!!!!!!!!!!!!!!!')
+    r1 = '6EK0_L5:3714-3719_3732-3737'
+    # r2 = '6ERI_AA:1860-1864_1900-1904'
+    r2 = '5O60_A:2067-2071_2110-2114'
+    node1 = strToNode(r1)
+    node2 = strToNode(r2)
+
+    for c_id in rmsd_data_dict:
+        for (i, l1) in rmsd_data_dict[c_id][1]:
+            if l1 == r1:
+                _, fit_ret = rmsd_data_dict[c_id][1][(i, l1)]
+
+                for (j, l2, rmsd, _) in fit_ret:
+                    if l2 == r2:
+                        logger.info('rmsd: ' + str(rmsd))
+
+    logger.info('!!!!!!!!!!!!!!DEBUG PRINT 3 END!!!!!!!!!!!!!!!!!!!!')
+
+
 def load_alignment_and_rmsd_data(clusters, loop_list, input_fname_base, partial_pdbx_dir, alignment_dir, graphs_and_pickles_dir, previous_graph_file_reused):
     graph_fname = os.path.join(graphs_and_pickles_dir, input_fname_base + '.z.graph')
     alignment_data = load_alignment_data(input_fname_base, alignment_dir, graphs_and_pickles_dir, graph_fname, clusters, previous_graph_file_reused)
-    
+
+    # debug_print2(alignment_data)
+
     if alignment_data == None:
         return None, None
 
     rmsd_data_dict = generate_rmsd_data(input_fname_base, partial_pdbx_dir, graphs_and_pickles_dir, alignment_data, clusters, loop_list, previous_graph_file_reused)
+
+    # debug_print3(rmsd_data_dict)
 
     return alignment_data, rmsd_data_dict
 

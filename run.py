@@ -184,6 +184,7 @@ def main():
     attempt = 1
     while attempt <= 5:
         attempt += 1
+        # generate_best_alignment_data function generates .graph file
         previous_graph_file_reused, all_alignment_files_found = generate_best_alignment_data(input_fname_base, graphs_and_pickles_dir, alignment_dir, families)
         if all_alignment_files_found == False:
             get_alignment_files(alignment_dir, families, loop_node_list_str, is_alignment_from_user)

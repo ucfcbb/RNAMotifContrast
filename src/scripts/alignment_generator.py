@@ -82,6 +82,7 @@ def generate_alignment_file_for_single_loop(alignment_dir, l1, l2_list):
 		#	 param_string += " --SemiOriginal"
 
 		#append
+		# logger.info('Generating alignment for ' + l1 + ' and ' + l2)
 		os.system('%s %s %s %s >> %s' % (scanx_aln_executable, file1, file2, param_string, output_fn))
 
 # def _generate_alignment_files_worker(p):
@@ -504,7 +505,7 @@ def generate_best_alignment_data(input_fname_base, graphs_and_pickles_dir, align
 
 	# print_a_dict_sorted(alignment_score)
 	# print('')
-	for l1, l2 in alignment_score:
+	for l1, l2 in sorted(alignment_score):
 		if (l1, l2) in checked_edge:
 			continue
 
@@ -517,7 +518,7 @@ def generate_best_alignment_data(input_fname_base, graphs_and_pickles_dir, align
 		# alignment score is same but z-score may be different
 		# pick the max z-score
 		edge_score = max(alignment_score[(l1, l2)], alignment_score[(l2, l1)])
-		if isClose(edge_score, alignment_score[(l1, l2)], 0.00000001):
+		if isClose(edge_score, alignment_score[(l1, l2)], 0.0000001):
 			t1 = l1
 			t2 = l2
 		else:
@@ -538,8 +539,20 @@ def generate_best_alignment_data(input_fname_base, graphs_and_pickles_dir, align
 
 		if node1 != node2:
 			edge = Edge(node1, node2)
-			if (edge not in edge_dict) or (edge_dict[edge][0] < edge_score):
+
+			if edge not in edge_dict:
 				edge_dict[edge] = (edge_score, t1, t2)
+			else:
+				best_edge_score, best_t1, best_t2 = edge_dict[edge]
+				if (best_edge_score < edge_score):
+					if isClose(edge_score, best_edge_score, 0.0000001):
+						if t1 < best_t1 or (t1 == best_t1 and t2 < best_t2):
+							edge_dict[edge] = (edge_score, t1, t2)
+					else:
+						edge_dict[edge] = (edge_score, t1, t2)
+
+			# if (edge not in edge_dict) or (edge_dict[edge][0] < edge_score):
+			# 	edge_dict[edge] = (edge_score, t1, t2)
 
 	for edge in edge_dict:
 		edge_score_dict[(edge.node1, edge.node2)] = edge_dict[edge][0]

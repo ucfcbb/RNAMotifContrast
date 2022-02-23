@@ -262,6 +262,16 @@ class Node:
     def __ne__(self, other):
         return self.chain != other.chain or set(self.regions) != set(other.regions)
 
+    def __lt__(self, other):
+        if str(self) < str(other):
+            return True
+        False
+
+    def __gt__(self, other):
+        if str(self) > str(other):
+            return True
+        False
+
     def __repr__(self):
         int_regions = []
         for region in self.regions:
@@ -285,6 +295,18 @@ class Edge:
     def __eq__(self, other):
         # return hash(self.node1) ^ hash(self.node2) == hash(other.node1) ^ hash(other.node2)
         return (self.node1 == other.node1 and self.node2 == other.node2) or (self.node1 == other.node2 and self.node2 == other.node1)
+
+    def __lt__(self, other):
+        if self.node1 == other.node1:
+            return self.node2 < other.node2
+        else:
+            return self.node1 < other.node1
+
+    def __gt__(self, other):
+        if self.node1 == other.node1:
+            return self.node2 > other.node2
+        else:
+            return self.node1 > other.node1
 
     def __hash__(self):
         return hash(self.node1) + hash(self.node2)

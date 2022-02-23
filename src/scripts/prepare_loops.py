@@ -129,7 +129,7 @@ def all_mapping_file_exists_for_single_pdb(pdb_id, chains):
 
 def write_invalid_mapping_file(pdb_id, chain_id):
     mapping_fname = os.path.join(pdb_fasta_mapping_dir, pdb_id + '_' + chain_id + '_invalid.rmsx.nch')
-    if not os.file.exists():
+    if not os.path.isfile(mapping_fname):
         fp = open(mapping_fname, 'w')
         fp.close()
 
@@ -196,12 +196,23 @@ def get_pdbx_and_mapping_data(pdb_id, chains):
     residue_dict, missing_residue_dict, modified_residue_dict = load_pdb_data_from_file(pdb_fn)
     residue_dict = insert_missing_residue(residue_dict, missing_residue_dict)
 
-    ref_seq_dict = {}
-    for record in SeqIO.parse(fasta_fn, 'fasta'):
-        # ref_seq_dict[record.id.strip().split('|')[0].strip().split(':')[1]] = str(record.seq)
-        chain_ids = record.description.strip().split('|')[1].strip().split(' ')[1].strip().split(',')
-        for chain_id in chain_ids:
-            ref_seq_dict[chain_id] = str(record.seq)
+    # ref_seq_dict = {}
+    # for record in SeqIO.parse(fasta_fn, 'fasta'):
+    #     # ref_seq_dict[record.id.strip().split('|')[0].strip().split(':')[1]] = str(record.seq)
+    #     # chain_ids = record.description.strip().split('|')[1].strip().split(' ')[1].strip().split(',')
+    #     # for chain_id in chain_ids:
+    #     #     ref_seq_dict[chain_id] = str(record.seq)
+    #     chain_ids = record.description.strip().split('|')[1].strip().split(' ')[1:]
+    #     for chain_id in chain_ids:
+    #         chain_id = chain_id.strip().strip(',')
+    #         if '[' in chain_id:
+    #             continue
+    #             # chain_id = chain_id.split('[')[0].strip()
+    #         elif ']' in chain_id:
+    #             chain_id = chain_id.split(']')[0].strip()
+            
+    #         ref_seq_dict[chain_id] = str(record.seq)
+    ref_seq_dict = load_fasta_seq(pdb_id, chains)
 
     chains = get_valid_chain_list(pdb_id, chains, residue_dict, modified_residue_dict, ref_seq_dict)
 
@@ -228,12 +239,21 @@ def generate_pdbx_fasta_mapping_files_for_single_pdb(pdb_id, chains):
     residue_dict = insert_missing_residue(residue_dict, missing_residue_dict)
     # residue_with_missing_base_dict = get_missing_residue(pdbx_dir + 'residue_with_missing_base_all/' + pdb_id + '.cif')
 
-    ref_seq_dict = {}
-    for record in SeqIO.parse(fasta_fn, 'fasta'):
-        # ref_seq_dict[record.id.strip().split('|')[0].strip().split(':')[1]] = str(record.seq)
-        chain_ids = record.description.strip().split('|')[1].strip().split(' ')[1].strip().split(',')
-        for chain_id in chain_ids:
-            ref_seq_dict[chain_id] = str(record.seq)
+    # ref_seq_dict = {}
+    # for record in SeqIO.parse(fasta_fn, 'fasta'):
+    #     # ref_seq_dict[record.id.strip().split('|')[0].strip().split(':')[1]] = str(record.seq)
+    #     # chain_ids = record.description.strip().split('|')[1].strip().split(' ')[1].strip().split(',')
+    #     chain_ids = record.description.strip().split('|')[1].strip().split(' ')[1:]
+    #     for chain_id in chain_ids:
+    #         chain_id = chain_id.strip().strip(',')
+    #         if '[' in chain_id:
+    #             continue
+    #             # chain_id = chain_id.split('[')[0].strip()
+    #         elif ']' in chain_id:
+    #             chain_id = chain_id.split(']')[0].strip()
+            
+    #         ref_seq_dict[chain_id] = str(record.seq)
+    ref_seq_dict = load_fasta_seq(pdb_id, chains)
         
     # for generating multi-chain sequence files
     multi_seq_dict = {}
